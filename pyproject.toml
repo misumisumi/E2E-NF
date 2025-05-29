@@ -6,35 +6,34 @@ authors = [
     { name = "Sumiharu Kobayashi", email = "t232525m@st.yamagata-u.ac.jp" },
 ]
 readme = "README.md"
-requires-python = "~=3.11"
+requires-python = ">=3.13"
 dependencies = [
-    "h5py~=3.11.0",
+    "h5py~=3.13.0",
     "hatchling~=1.27.0",
     "hydra-core~=1.3.2",
-    "librosa~=0.10.1",
-    "matplotlib~=3.8.4",
-    "numpy~=1.26.0",
-    "praat-parselmouth~=0.4.3",
-    "pyreaper~=0.0.10",
-    "pysptk~=0.2.2",
-    "pyworld",
-    "setuptools>=75.6.0",
-    "tensorboard~=2.16.2",
-    "torch==2.1.2+cu121; sys_platform == 'linux' and platform_machine == 'x86_64'",
-    "torch==2.1.2; sys_platform == 'darwin' or (sys_platform == 'linux' and platform_machine == 'aarch64')",
-    "torchaudio==2.1.2+cu121; sys_platform == 'linux' and platform_machine == 'x86_64'",
-    "torchaudio==2.1.2; sys_platform == 'darwin' or (sys_platform == 'linux' and platform_machine == 'aarch64')",
-    "torchvision==0.16.2+cu121; sys_platform == 'linux' and platform_machine == 'x86_64'",
-    "torchvision==0.16.2; sys_platform == 'darwin' or (sys_platform == 'linux' and platform_machine == 'aarch64')",
-    "tqdm~=4.66.4",
+    "librosa~=0.11.0",
+    "matplotlib~=3.10.3",
+    "numpy~=2.2.6",
+    "praat-parselmouth~=0.4.5",
+    "pyreaper~=0.0.11",
+    "pysptk~=1.0.1",
+    "pyworld~=0.3.4",
+    "scikit-learn~=1.6.1",
+    "setuptools~=80.9.0",
+    "tensorboard~=2.19.0",
+    "torch==2.7.0+cu128; sys_platform == 'linux' and platform_machine == 'x86_64'",
+    "torch==2.7.0; sys_platform == 'darwin' or (sys_platform == 'linux' and platform_machine == 'aarch64')",
+    "torchaudio==2.7.0+cu128; sys_platform == 'linux' and platform_machine == 'x86_64'",
+    "torchaudio==2.7.0; sys_platform == 'darwin' or (sys_platform == 'linux' and platform_machine == 'aarch64')",
+    "tqdm~=4.67.1",
 ]
 
 [dependency-groups]
 dev = [
-    "notebook~=7.0.6",
-    "nbclassic~=1.0.0",
-    "jupyter-console~=6.6.3",
-    "debugpy~=1.8.0",
+    "debugpy>=1.8.14",
+    "jupyter-console>=6.6.3",
+    "nbclassic>=1.3.1",
+    "notebook>=7.4.3",
 ]
 
 [project.scripts]
@@ -56,20 +55,18 @@ index-strategy = "unsafe-best-match"
 
 [tool.uv.sources]
 torch = [
-    { index = "pytorch-cu121", marker = "sys_platform == 'linux' and platform_machine == 'x86_64'" },
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux' and platform_machine == 'x86_64'" },
     { index = "pytorch-cpu", marker = "sys_platform == 'darwin' or (sys_platform == 'linux' and platform_machine == 'aarch64')" },
 ]
 torchaudio = [
-    { index = "pytorch-cu121", marker = "sys_platform == 'linux' and platform_machine == 'x86_64'" },
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux' and platform_machine == 'x86_64'" },
     { index = "pytorch-cpu", marker = "sys_platform == 'darwin' or (sys_platform == 'linux' and platform_machine == 'aarch64')" },
 ]
 torchvision = [
-    { index = "pytorch-cu121", marker = "sys_platform == 'linux' and platform_machine == 'x86_64'" },
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux' and platform_machine == 'x86_64'" },
     { index = "pytorch-cpu", marker = "sys_platform == 'darwin' or (sys_platform == 'linux' and platform_machine == 'aarch64')" },
 ]
 pyworld = { git = "https://github.com/JeremyCCHsu/Python-Wrapper-for-World-Vocoder.git" }
-audiometrics = { workspace = true }
-
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
@@ -77,8 +74,8 @@ url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [[tool.uv.index]]
-name = "pytorch-cu121"
-url = "https://download.pytorch.org/whl/cu121"
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
 explicit = true
 
 [build-system]

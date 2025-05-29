@@ -43,7 +43,7 @@ def main(config: DictConfig) -> None:
         )
     else:
         checkpoint_path = config.checkpoint_path
-    state_dict = torch.load(to_absolute_path(checkpoint_path), map_location="cpu")
+    state_dict = torch.load(to_absolute_path(checkpoint_path), map_location="cpu", weights_only=False)
     logger.info(f"Loaded model parameters from {checkpoint_path}.")
     model = hydra.utils.instantiate(config.generator)
     model.load_state_dict(state_dict["model"]["generator"])

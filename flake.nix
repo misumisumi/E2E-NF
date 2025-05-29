@@ -1,11 +1,11 @@
 {
   nixConfig = {
     extra-substituters = [
-      "https://cuda-maintainers.cachix.org"
+      "https://nix-community.cachix.org"
       "https://devenv.cachix.org"
     ];
     extra-trusted-public-keys = [
-      "cuda-maintainers.cachix.org-1:0dq3bujKpuEPMCX6U4WylrUDZ9JyUG0VpVZa7CNfq5E="
+      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
       "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw="
     ];
   };
@@ -15,8 +15,10 @@
       url = "file+file:///dev/null";
       flake = false;
     };
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nix-ml-ops = {
       url = "github:atry/nix-ml-ops";
+      inputs.nixpkgs.follows = "nixpkgs";
       inputs.devenv-root.follows = "devenv-root";
     };
   };
@@ -43,6 +45,7 @@
               common:
               {
                 ldFallback.libraries = [
+                  pkgs.hdf5
                   pkgs.sox.lib
                 ];
               }
@@ -52,7 +55,7 @@
                     cfg = common.config.cuda;
                   in
                   {
-                    cudaPackages = pkgs.cudaPackages_12_1;
+                    cudaPackages = pkgs.cudaPackages_12_8; # cuda 12.8
                     packages = with cfg.cudaPackages; [
                       cuda_nvcc
                       cudatoolkit
@@ -76,7 +79,7 @@
                   languages = {
                     python = {
                       enable = true;
-                      package = pkgs.python311;
+                      package = pkgs.python313;
                       venv.enable = true;
                       uv = {
                         enable = true;
