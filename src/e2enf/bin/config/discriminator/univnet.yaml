@@ -1,4 +1,4 @@
-_target_: sifigan.models.UnivNetMultiResolutionMultiPeriodDiscriminator
+_target_: e2enf.models.UnivNetMultiResolutionMultiPeriodDiscriminator
 fft_sizes: [1024, 2048, 512]           # FFT sizes for each spectral discriminator.
 hop_sizes: [120, 240, 50]              # Hop sizes for each spectral discriminator.
 win_lengths: [600, 1200, 240]          # Window lengths for each spectral discriminator.

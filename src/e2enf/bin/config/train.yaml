@@ -2,10 +2,11 @@
 
 defaults:
   - _self_
-  - generator: e2enf
-  - discriminator: hifigan
-  - train: e2enf
-  - data: jvs.e2enf
+  - generator: sifigan
+  - discriminator: univnet
+  - train/vocoder@train: sifigan
+  - data: jvs005_100.sifigan
+
 
 hydra:
   run:
@@ -17,6 +18,6 @@ hydra:
         format: "[%(asctime)s][%(levelname)s][%(module)s | %(lineno)s] %(message)s"
     disable_existing_loggers: false
 
-out_dir: # Directory to output training results.
+out_dir: exp/jvs005_100.sifigan # Directory to output training results.
 seed: 12345 # Seed number for random numbers.
 device: cuda

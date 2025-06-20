@@ -5,13 +5,14 @@ from pathlib import Path
 
 import hydra
 import numpy as np
+import pyworld as pw
 import torch
 from hydra.utils import to_absolute_path
 from joblib import Parallel, delayed
 from omegaconf import DictConfig, OmegaConf
 from tqdm import tqdm
 
-from e2enf.features import f0_utils, fixed, praat, spectral, spectrogram
+from e2enf.features import f0_utils, fixed, praat, spectral, spectrogram, world
 from e2enf.utils import audio_io, file_io, filter, utils
 
 # TODO: logging in multiprocessing
@@ -68,7 +69,7 @@ def process(filepath: PathLike, config: DictConfig):
         n_mels=config.n_mels,
         n_fft=config.n_fft,
         win_size=config.win_size,
-        hop_length=config.hop_length,
+        hop_length=config.hop_size,
         fmin=config.fmin,
         fmax=config.fmax,
         clip_val=config.clip_val,
@@ -76,7 +77,7 @@ def process(filepath: PathLike, config: DictConfig):
     f0_extractor = f0_utils.F0_Extractor(
         "harvest",
         sample_rate=config.sample_rate,
-        hop_size=config.hop_length,
+        hop_size=config.hop_size,
         f0_min=config.minf0,
         f0_max=config.maxf0,
         fix_by_reaper=False,
@@ -86,10 +87,10 @@ def process(filepath: PathLike, config: DictConfig):
     mfbsp = to_stft.to_mel(spec, log=config.log)
     mfbsp = mfbsp.numpy()
 
-    f0 = f0_extractor.extract(wav, return_time=False)
+    f0, time = f0_extractor.extract(wav, return_time=True)
     uv, cf0, is_all_uv = fixed.to_continuous(f0)
     if is_all_uv:
-        lpf_fs = int(config.sample_rate / config.hop_length)
+        lpf_fs = int(config.sample_rate / config.hop_size)
         cf0_lpf = filter.low_pass_filter(cf0, lpf_fs, cutoff=20)
         next_cutoff = 70
         while not (cf0_lpf >= [0]).all():
@@ -99,19 +100,37 @@ def process(filepath: PathLike, config: DictConfig):
         logger.warning(f"all frame is unvoiced: {filepath}")
         return None
 
+    env = world.get_sp_envelope(wav, f0, time, sample_rate=config.sample_rate)
+    mcep = world.sp2mc(env, order=config.mcep_order, sr=config.sample_rate).T
+    ap = world.get_aperiodicity(wav, f0, time, sample_rate=config.sample_rate)
+    bap = world.code_ap(ap, sr=config.sample_rate).T
+
     formants, fo_time = praat.get_formants(
         wav,
         sr=config.sample_rate,
         n_formant=config.n_formant,
-        hop_length=config.hop_length,
+        hop_length=config.hop_size,
         win_size=config.fo_win_size,
         fmax=config.fo_max,
         pre_enphasis=config.pre_enphasis,
     )
     formants = praat.fix_formants(formants)
 
-    uv, f0, cf0_lpf, spec, mfbsp, formants = fixed.adjust_min_len([uv, f0, cf0_lpf, spec, mfbsp, formants])
-    assert uv.shape[0] == f0.shape[0] == cf0_lpf.shape[0] == spec.shape[-1] == mfbsp.shape[-1] == formants.shape[-1]
+    uv, f0, cf0_lpf, spec, mfbsp, formants, mcep, bap = fixed.adjust_min_len(
+        [uv, f0, cf0_lpf, spec, mfbsp, formants, mcep, bap]
+    )
+    assert (
+        uv.shape[0]
+        == f0.shape[0]
+        == cf0_lpf.shape[0]
+        == spec.shape[-1]
+        == mfbsp.shape[-1]
+        == formants.shape[-1]
+        == mcep.shape[-1]
+        == bap.shape[-1]
+    ), (
+        f"shape mismatch: uv {uv.shape}, f0 {f0.shape}, cf0_lpf {cf0_lpf.shape}, spec {spec.shape}, mfbsp {mfbsp.shape}, formants {formants.shape}, mcep {mcep.shape}, bap {bap.shape}"
+    )
 
     f1, f2, f3, f4 = formants[0], formants[1], formants[2], formants[3]
     _, cf1, _ = fixed.to_continuous(f1)
@@ -163,6 +182,8 @@ def process(filepath: PathLike, config: DictConfig):
     file_io.write_hdf5(feat_name, "/energy", energy)
     file_io.write_hdf5(feat_name, "/centroid", centroid.T)
     file_io.write_hdf5(feat_name, "/mfbsp", mfbsp.T)
+    file_io.write_hdf5(feat_name, "/mcep", mcep.T)
+    file_io.write_hdf5(feat_name, "/bap", bap.T)
 
 
 @hydra.main(version_base=None, config_path="config", config_name="extract_features")

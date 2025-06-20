@@ -14,14 +14,16 @@ feats: # List file of input features.
 stats: # Path to file to output statistics.
 feat_types: [
     "f0",
+    "lf0",
     "lcf0",
     "cf1",
     "cf2",
     "cf3",
     "cf4",
-    "uv",
     "slope",
     "centroid",
     "energy",
     "mfbsp",
+    "mcep",
+    "bap",
   ] # Feature types.

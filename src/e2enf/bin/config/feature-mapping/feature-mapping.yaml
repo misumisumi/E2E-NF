@@ -1,4 +1,4 @@
-_target_: e2enf.models.NeuralFormants
+_target_: e2enf.models.FeatureMapping
 in_channels: 9 # 入力のチャネル数
 out_channels: 80 # 出力のチャネル数
 layers: 6 # レイヤー数

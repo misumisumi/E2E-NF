@@ -1,28 +1,7 @@
-# @package _global_
-
-hydra:
-  run:
-    dir: ./
-  output_subdir: null
-  job_logging:
-    formatters:
-      simple:
-        format: "[%(asctime)s][%(levelname)s][%(module)s | %(lineno)s] %(message)s"
-    disable_existing_loggers: false
-
-file_list:  # List file of input wav files.
-in_dir: wav
-out_dir: hdf5 # Directory to save generated samples.
-feature_format: .h5 # Feature format.
-n_jobs: -1 # Use all core
-
-spkinfo: data/spk_info.yaml # YAML format speaker information.
-spkidx: 0 # Speaker index of the split path.
-
+# Default audio preprocess setting.
 sample_rate: 24000 # Sampling rate.
 inv: true # If false, wav is restored from acoustic features.
 
-# Default audio preprocess setting.
 highpass_cutoff: 70 # Cut-off-frequency for low-cut-filter.
 center: false # Pad the extracted sample to the center of the frame
 
@@ -37,10 +16,10 @@ fmax: 7600 # Maximum frequency in mel basis calculation.
 clip_val: 1e-5
 log: "log10"
 
-mcep_order: 40
+mcep_order: 39
 
 # Praat settings
-# Use fft_size or win_length of Mel-spectrogram extraction setting
+# Use fft_size or win_size of Mel-spectrogram extraction setting
 f0_extractor: "harvest"
 minf0: 75.0 # Minimum F0 value.
 maxf0: 600 # Maximum F0 value.

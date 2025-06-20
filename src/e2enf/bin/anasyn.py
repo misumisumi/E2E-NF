@@ -45,7 +45,7 @@ def main(config: DictConfig) -> None:
 
     # load pre-trained model from checkpoint file
     model = instantiate(config.generator)
-    state_dict = torch.load(to_absolute_path(config.checkpoint_path), map_location="cpu")
+    state_dict = torch.load(to_absolute_path(config.checkpoint_path), map_location="cpu", weights_only=False)
     model.load_state_dict(state_dict["model"]["generator"])
     logger.info(f"Loaded model parameters from {config.checkpoint_path}.")
     model.remove_weight_norm()

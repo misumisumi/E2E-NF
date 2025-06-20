@@ -6,6 +6,16 @@ eval_interval_steps: 2000 # Interval steps to evaluate the network.
 log_interval_steps: 2000 # Interval steps to record the training log.
 resume: # Epoch to resume training.
 
+check_intermediate_result: true
+amp: # Use automatic mised precision (torch.amp)
+  enabled: false
+
+early_stopping:
+  enabled: false
+  patience: 7
+  delta: 0
+  target_loss: "mel"
+
 # Loss balancing coefficients.
 lambda_mel: 45.0
 lambda_reg: 0.0
@@ -15,16 +25,16 @@ lambda_fm: 2.0
 # Mel-spectral loss setting
 mel_loss:
   _target_: e2enf.losses.MelSpectralLoss
-  fft_size: 2048 # FFT size for STFT-based loss.
-  hop_size: 300 # Hop size for STFT-based loss
-  win_length: 1200 # Window length for STFT-based loss.
+  fft_size: 1024 # FFT size for STFT-based loss.
+  hop_size: 256 # Hop size for STFT-based loss
+  win_length: 1024 # Window length for STFT-based loss.
   window: hann_window # Window function for STFT-based loss.
   sample_rate: 24000 # Samplring rate.
   n_mels: 80 # Number of bins of mel-filter-bank.
   fmin: 0 # Minimum frequency of mel-filter-bank.
-  fmax: 12000
-  #null # Maximum frequency of mel-filter-bank.
-  # If null, it will be fs / 2.
+  fmax:
+    null # Maximum frequency of mel-filter-bank.
+    # If null, it will be fs / 2.
 
 # Adversarial loss setting
 adv_loss:

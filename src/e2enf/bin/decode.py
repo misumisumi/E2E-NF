@@ -1,5 +1,6 @@
 import os
 from logging import getLogger
+from pathlib import Path
 from time import time
 
 import hydra
@@ -35,9 +36,9 @@ def main(config: DictConfig) -> None:
     logger.info(f"Decode on {device}.")
 
     # load pre-trained model from checkpoint file
+    out_dir = Path(config.out_dir)
     if config.checkpoint_path is None:
-        checkpoint_path = os.path.join(
-            config.out_dir,
+        checkpoint_path = out_dir.joinpath(
             "checkpoints",
             f"checkpoint-{config.checkpoint_steps}steps.pkl",
         )
@@ -51,14 +52,14 @@ def main(config: DictConfig) -> None:
     model.eval().to(device)
 
     # check directory existence
-    out_dir = to_absolute_path(os.path.join(config.out_dir, "wav", str(config.checkpoint_steps)))
-    os.makedirs(out_dir, exist_ok=True)
+    out_dir = Path(to_absolute_path(out_dir.joinpath("wav", str(config.checkpoint_steps))))
+    out_dir.mkdir(parents=True, exist_ok=True)
 
     for f0_factor in config.f0_factors:
         for formants_factor in config.formants_factors:
             dataset = FeatDataset(
-                stats=to_absolute_path(config.data.stats),
-                feat_list=config.data.eval_feat,
+                feat_lists=config.data.eval_feat,
+                stats_lists=config.data.stats,
                 return_filename=True,
                 sample_rate=config.data.sample_rate,
                 hop_size=config.data.hop_size,
@@ -78,7 +79,8 @@ def main(config: DictConfig) -> None:
 
             with torch.no_grad(), tqdm(dataset, desc="[decode]") as pbar:
                 total_rtf = 0.0
-                for idx, (feat_path, c, f0, cf0) in enumerate(pbar, 1):
+                for idx, items in enumerate(pbar, 1):
+                    _, feat_path, c, _, f0, cf0 = items
                     # create dense factors
                     dfs = []
                     for df, us in zip(
@@ -108,12 +110,12 @@ def main(config: DictConfig) -> None:
                     total_rtf += rtf
 
                     # save output signal as PCM 16 bit wav file
-                    utt_id = os.path.splitext(os.path.basename(feat_path))[0]
+                    utt_id = feat_path.stem
                     fo = "_".join([f"{f:.2f}" for f in formants_factor])
-                    spk_id = feat_path.split(os.path.sep)[config.spkidx]
-                    save_dir = os.path.join(out_dir, spk_id)
-                    os.makedirs(save_dir, exist_ok=True)
-                    save_path = os.path.join(save_dir, f"{utt_id}_f{f0_factor:.2f}_fo{fo}.wav")
+                    spk_id = feat_path.parents[config.spkidx].name
+                    save_dir = out_dir.joinpath(spk_id)
+                    save_dir.mkdir(parents=True, exist_ok=True)
+                    save_path = save_dir.joinpath(f"{utt_id}_f{f0_factor:.2f}_fo{fo}.wav")
                     y = y.view(-1).cpu().numpy()
                     sf.write(save_path, y, config.data.sample_rate, "PCM_16")
 

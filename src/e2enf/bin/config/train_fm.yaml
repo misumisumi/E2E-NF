@@ -2,9 +2,9 @@
 
 defaults:
   - _self_
-  - train: neuralformants
-  - model: neuralformants
-  - data: jvs.e2enf
+  - train/feature-mapping@train: invert-feature-mapping
+  - feature-mapping@model: invert-feature-mapping
+  - data: jvs.feature-mapping
 
 hydra:
   run:
@@ -16,6 +16,6 @@ hydra:
         format: "[%(asctime)s][%(levelname)s][%(module)s | %(lineno)s] %(message)s"
     disable_existing_loggers: false
 
-out_dir:  # Directory to output training results.
+out_dir: exp/jvs005_100.invert_fm # Directory to output training results.
 seed: 12345 # Seed number for random numbers.
-device: "cuda:0"
+device: "cuda"

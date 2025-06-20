@@ -7,7 +7,7 @@ from e2enf.layers.residual_block import ResSkipBlock
 torch_is_ge_210 = version.parse(torch.__version__) >= version.parse("2.1.0")
 
 
-class NeuralFormants(nn.Module):
+class FeatureMapping(nn.Module):
     def __init__(
         self,
         in_channels: int = 9,  # 入力のチャネル数
@@ -52,7 +52,7 @@ class NeuralFormants(nn.Module):
         """Forward step
 
         Args:
-            x: the input waveform
+            x: the acoustic features
 
         Returns:
             torch.Tensor: the output waveform

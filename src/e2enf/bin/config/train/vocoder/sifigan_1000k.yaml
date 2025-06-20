@@ -6,6 +6,16 @@ eval_interval_steps: 2000             # Interval steps to evaluate the network.
 log_interval_steps: 2000              # Interval steps to record the training log.
 resume:                               # Epoch to resume training.
 
+check_intermediate_result: true
+amp: # Use automatic mised precision (torch.amp)
+  enabled: false
+
+early_stopping:
+  enabled: false
+  patience: 7
+  delta: 0
+  target_loss: "mel"
+
 # Loss balancing coefficients.
 lambda_mel: 45.0
 lambda_reg: 1.0

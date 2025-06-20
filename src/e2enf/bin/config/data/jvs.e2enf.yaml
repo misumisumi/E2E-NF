@@ -1,22 +1,31 @@
-# Dataset settings
-train_audio: data/scp/jvs/train.scp  # List file of training audio files.
-train_feat: data/scp/jvs/train.list  # List file of training feature files.
-valid_audio: data/scp/jvs/valid.scp  # List file of validation audio files.
-valid_feat: data/scp/jvs/valid.list  # List file of validation feature files.
-eval_feat: data/scp/jvs/eval.list    # List file of evaluation feature files for decoding.
-stats: data/stats/jvs_no_dev.joblib   # Path to the file of statistics.
-allow_cache: false  # Whether to allow cache in dataset. If true, it requires cpu memory
+defaults:
+  - default@: jvs
 
-# Feature settings
-sample_rate: 24000               # Sampling rate.
-hop_size: 300                    # Hop size.
+# Dataset settings
+train_audio:
+  - data/scp/jvs/train.scp  # List file of training audio files.
+train_feat:
+  - data/scp/jvs/train.list  # List file of training feature files.
+valid_audio:
+  - data/scp/jvs/valid.scp  # List file of validation audio files.
+valid_feat:
+  - data/scp/jvs/valid.list  # List file of validation feature files.
+eval_feat:
+  - data/scp/jvs/eval.list    # List file of evaluation feature files for decoding.
+stats:
+  - data/stats/jvs_no_dev.joblib   # Path to the file of statistics.
+allow_cache: true  # Whether to allow cache in dataset. If true, it requires cpu memory
+
+spkinfo: data/jvs_info.yaml # YAML format speaker information.
+
+# Generator settings
 dense_factors: [0.5, 1, 4, 8]    # Dense factor in PDCNNs.
 sine_amp: 0.1                    # Sine amplitude.
 noise_amp: 0.003                 # Noise amplitude.
 signal_types: ["sine"]           # List of input signal types for generator.
 sine_f0_type: "cf0"              # F0 type for sine signal ("f0" or "cf0").
 df_f0_type: "cf0"                # F0 type for dilation factor ("f0" or "cf0").
-# aux_feats: ["mcep", "bap"]       # Auxiliary features.
+# Auxiliary features.
 aux_feats: ["uv", "lcf0", "cf1", "cf2", "cf3", "cf4", "slope", "centroid", "energy"]
                                  # "uv": V/UV binary.
                                  # "f0": discrete f0.

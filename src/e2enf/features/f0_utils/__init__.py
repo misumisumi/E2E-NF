@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 from .extractor import F0_Extractor
 
@@ -29,10 +30,36 @@ def log2f0(f0: np.ndarray) -> np.ndarray:
     return log2f0
 
 
+def log2exp(lf0: np.ndarray) -> np.ndarray:
+    f0 = lf0.copy()
+    nonzero_indices = np.nonzero(f0)
+    f0[nonzero_indices] = np.exp(f0[nonzero_indices])
+
+    return f0
+
+
 def vuv(f0: np.ndarray) -> np.ndarray:
     nonzero_indices = np.nonzero(f0)
     vuv = np.zeros_like(f0)
     vuv[nonzero_indices] = 1
+
+    return vuv
+
+
+def logf0_torch(f0: torch.Tensor) -> torch.Tensor:
+    lf0 = torch.where(f0 > 0, torch.log(f0), 0)
+
+    return lf0
+
+
+def log2exp_torch(lf0: torch.Tensor) -> torch.Tensor:
+    f0 = torch.where(lf0 > 0, torch.exp(lf0), 0)
+
+    return f0
+
+
+def vuv_torch(f0: torch.Tensor) -> torch.Tensor:
+    vuv = torch.where(f0 > 0, 1, 0)
 
     return vuv
 

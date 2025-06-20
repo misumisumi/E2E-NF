@@ -1,14 +1,24 @@
 # Interval setting
 discriminator_train_start_steps: 0 # Number of steps to start to train discriminator.
-train_max_steps: 400000 # Number of pre-training steps.
+train_max_steps: 500000 # Number of pre-training steps.
 save_interval_steps: 50000 # Interval steps to save checkpoint.
 eval_interval_steps: 2000 # Interval steps to evaluate the network.
 log_interval_steps: 2000 # Interval steps to record the training log.
-resume: # Epoch to resume training.
+resume: # step to resume training.
+
+check_intermediate_result: true
+amp: # Use automatic mised precision (torch.amp)
+  enabled: false
+
+early_stopping:
+  enabled: false
+  patience: 7
+  delta: 0
+  target_loss: "mel"
 
 # Loss balancing coefficients.
 lambda_mel: 45.0
-lambda_reg: 0.0
+lambda_reg: 1.0
 lambda_adv: 1.0
 lambda_fm: 2.0
 
@@ -25,6 +35,23 @@ mel_loss:
   fmax:
     null # Maximum frequency of mel-filter-bank.
     # If null, it will be fs / 2.
+
+# Source regularization loss setting
+reg_loss:
+  _target_: e2enf.losses.ResidualLoss
+  sample_rate: 24000 # Sampling rate.
+  fft_size: 2048 # FFT size.
+  hop_size: 300 # Hop size.
+  f0_floor: 100 # Minimum F0.
+  f0_ceil: 840 # Maximum F0.
+  n_mels: 80 # Number of mel-filter-bank bins.
+  fmin: 0 # Minimum frequency of mel-filter-bank.
+  fmax: null # Maximum frequency of mel-filter-bank.
+  power: false # Whether to use power or magnitude spectrogram.
+  elim_0th:
+    true # Whether to exclude 0th components of cepstrums in
+    # CheapTrick estimation. If set to true, source-network
+    # is forced to estimate the power of the output signal.
 
 # Adversarial loss setting
 adv_loss:
@@ -47,10 +74,10 @@ generator_scheduler:
   _target_: torch.optim.lr_scheduler.MultiStepLR
   gamma: 0.5
   milestones:
+    - 100000
     - 200000
+    - 300000
     - 400000
-    - 600000
-    - 800000
 generator_grad_norm: 10
 discriminator_optimizer:
   _target_: torch.optim.Adam
@@ -61,8 +88,8 @@ discriminator_scheduler:
   _target_: torch.optim.lr_scheduler.MultiStepLR
   gamma: 0.5
   milestones:
+    - 100000
     - 200000
+    - 300000
     - 400000
-    - 600000
-    - 800000
 discriminator_grad_norm: 10

@@ -1,0 +1,27 @@
+# Interval setting
+train_max_steps: 99000 # Number of pre-training steps.
+save_interval_steps: 10000 # Interval steps to save checkpoint.
+eval_interval_steps: 2000 # Interval steps to evaluate the network.
+log_interval_steps: 1000 # Interval steps to record the training log.
+resume: # Epoch to resume training.
+
+mfbsp2spkparams: false
+
+check_intermediate_result: true
+amp: # Use automatic mised precision (torch.amp)
+  enabled: false
+
+loss:
+  _target_: torch.nn.MSELoss
+
+# Optimizer and scheduler setting
+neuralformants_optimizer:
+  _target_: torch.optim.Adam
+  lr: 1.0e-4
+  betas: [0.5, 0.9]
+  weight_decay: 0.0
+neuralformants_scheduler:
+  _target_: torch.optim.lr_scheduler.StepLR
+  gamma: 0.5
+  step_size: 60000
+grad_norm: 10

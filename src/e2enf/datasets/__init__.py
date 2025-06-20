@@ -1,1 +1,1 @@
-from .audio_feat_dataset import *
+from .audio_feat_dataset import *  # NOQA

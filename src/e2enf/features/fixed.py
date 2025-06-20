@@ -2,7 +2,6 @@ from logging import getLogger
 from typing import Optional
 
 import numpy as np
-from scipy.interpolate import interp1d
 
 logger = getLogger(__name__)
 
@@ -52,8 +51,7 @@ def to_continuous(y: np.ndarray) -> tuple[np.ndarray, np.ndarray, bool]:
     # get non-zero frame index
     nz_frames = np.where(cy != 0)[0]
     # perform linear interpolation
-    f = interp1d(nz_frames, cy[nz_frames])
-    cy = f(np.arange(0, cy.shape[0]))
+    cy = np.interp(np.arange(0, cy.shape[0]), nz_frames, cy[nz_frames])
 
     return uv, cy, True
 
@@ -93,6 +91,10 @@ def adjust_min_len(xs: tuple[np.ndarray]) -> tuple[np.ndarray]:
         fixed length features
     """
     min_len_x = min([x.shape[-1] for x in xs])
+    max_len_x = max([x.shape[-1] for x in xs])
+    assert max_len_x - min_len_x <= 3, (
+        f"The difference between frames for each feature is too large. {max_len_x - min_len_x} frames"
+    )
     xs = [x[:min_len_x] if x.ndim == 1 else x[:, :min_len_x] for x in xs]
 
     return xs

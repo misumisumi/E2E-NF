@@ -20,11 +20,13 @@ dependencies = [
     "pyworld~=0.3.4",
     "scikit-learn~=1.6.1",
     "setuptools~=80.9.0",
+    "standard-imghdr>=3.13.0",
     "tensorboard~=2.19.0",
     "torch==2.7.0+cu128; sys_platform == 'linux' and platform_machine == 'x86_64'",
     "torch==2.7.0; sys_platform == 'darwin' or (sys_platform == 'linux' and platform_machine == 'aarch64')",
     "torchaudio==2.7.0+cu128; sys_platform == 'linux' and platform_machine == 'x86_64'",
     "torchaudio==2.7.0; sys_platform == 'darwin' or (sys_platform == 'linux' and platform_machine == 'aarch64')",
+    "torchfcpe>=0.0.4",
     "tqdm~=4.67.1",
 ]
 
@@ -43,8 +45,10 @@ e2enf-data_augment = "e2enf.bin.data_augment:main"
 e2enf-decode = "e2enf.bin.decode:main"
 e2enf-extract_features = "e2enf.bin.extract_features:main"
 e2enf-train = "e2enf.bin.train:main"
-nf-train = "e2enf.bin.neuralformants.train:main"
-nf-decode = "e2enf.bin.neuralformants.decode:main"
+fm-train = "e2enf.bin.train_fm:main"
+fm-decode = "e2enf.bin.decode_fm:main"
+# nf-train = "e2enf.bin.neuralformants.train:main"
+# nf-decode = "e2enf.bin.neuralformants.decode:main"
 
 [tool.setuptools.packages.find]
 where = ["src/"]

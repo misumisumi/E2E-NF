@@ -68,6 +68,8 @@ class HiFiGANGenerator(nn.Module):
         assert len(upsample_scales) == len(upsample_kernel_sizes)
         assert len(resblock_dilations) == len(resblock_kernel_sizes)
 
+        self.upsample_scales = upsample_scales
+
         # define modules
         self.num_upsamples = len(upsample_kernel_sizes)
         self.qp_resdual_dilations = qp_resblock_dilations
@@ -295,8 +297,11 @@ class SiFiGANGenerator(nn.Module):
         assert kernel_size % 2 == 1, "Kernel size must be odd number."
         assert len(upsample_scales) == len(upsample_kernel_sizes)
 
+        self.upsample_scales = upsample_scales
+
         # define modules
         self.num_upsamples = len(upsample_kernel_sizes)
+        self.upsample_scales = upsample_scales
         self.source_network_params = source_network_params
         self.filter_network_params = filter_network_params
         self.share_upsamples = share_upsamples
@@ -580,6 +585,7 @@ class SiFiGANDirectGenerator(nn.Module):
         assert len(upsample_scales) == len(upsample_kernel_sizes)
 
         # define modules
+        self.upsample_scales = upsample_scales
         self.num_upsamples = len(upsample_kernel_sizes)
         self.source_network_params = source_network_params
         self.filter_network_params = filter_network_params
@@ -790,7 +796,7 @@ class SiFiGANDirectGenerator(nn.Module):
 
 
 class FormantHiFiGANGenerator(nn.Module):
-    """HiFiGAN generator module with customizable pitch-dependent mechanisms."""
+    """WaveNet like gated network + HiFiGAN generator module with customizable pitch-dependent mechanisms."""
 
     def __init__(
         self,
@@ -851,6 +857,8 @@ class FormantHiFiGANGenerator(nn.Module):
         assert kernel_size % 2 == 1, "Kernel size must be odd number."
         assert len(upsample_scales) == len(upsample_kernel_sizes)
         assert len(resblock_dilations) == len(resblock_kernel_sizes)
+
+        self.upsample_scales = upsample_scales
 
         # define modules
         self.input_conv = Conv1d(
@@ -1113,6 +1121,8 @@ class E2ENFPlusGenerator(nn.Module):
         assert kernel_size % 2 == 1, "Kernel size must be odd number."
         assert len(upsample_scales) == len(upsample_kernel_sizes)
         assert len(resblock_dilations) == len(resblock_kernel_sizes)
+
+        self.upsample_scales = upsample_scales
 
         # define modules
         self.input_conv = Conv1d(

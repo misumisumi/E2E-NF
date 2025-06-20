@@ -9,6 +9,7 @@ from omegaconf import DictConfig, OmegaConf
 from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 
+from e2enf.features.f0_utils import logf0
 from e2enf.utils.file_io import read_hdf5, read_txt
 
 # A logger for this file
@@ -34,9 +35,9 @@ def calc_stats(file_list, config):
             if feat_type == "f0":
                 f0 = read_hdf5(to_absolute_path(filename), "/f0")
                 feat = np.expand_dims(f0[f0 > 0], axis=-1)
-            elif "lcf" in feat_type:  # lcf0, lcf1, lcf2
+            elif "lcf" in feat_type or "lf0" in feat_type:  # log-f0 or lcf0, lcf1, lcf2
                 continues_value = read_hdf5(to_absolute_path(filename), f"/{feat_type.replace('l', '')}")
-                feat = np.log(continues_value)
+                feat = logf0(continues_value)
             else:
                 feat = read_hdf5(to_absolute_path(filename), f"/{feat_type}")
             if feat.shape[0] == 0:

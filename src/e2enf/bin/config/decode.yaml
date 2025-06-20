@@ -2,8 +2,8 @@
 
 defaults:
   - _self_
-  - generator: e2enf
-  - data: jvs.e2enf
+  - generator: e2esifinf
+  - data: jvs.e2esifinf
 
 hydra:
   run:
@@ -15,12 +15,14 @@ hydra:
         format: "[%(asctime)s][%(levelname)s][%(module)s | %(lineno)s] %(message)s"
     disable_existing_loggers: false
 
-out_dir: # Directory to output decoding results.
-spkidx: -2
+out_dir: ./exp/jvs005_100.e2esifinf # Directory to output decoding results.
+spkidx: 0 # 0 is parent_dir == spk name
 checkpoint_path: # Path to the checkpoint of pre-trained model.
-checkpoint_steps: 400000 # Path to the checkpoint of pre-trained model.
+checkpoint_steps: 500000 # Path to the checkpoint of pre-trained model.
 seed: 100 # Seed number for random numbers.
 save_source: false # Whether to save source excitation signals.
-f0_factors: [1.00] # F0 factor.
-formants_factors: [[1.0, 1.0, 1.0, 1.0]] # formants factor.
+f0_factors:
+  - 1.00 # F0 factor.
+formants_factors: # formants factor.
+  - [1.0, 1.0, 1.0, 1.0]
 device: cuda

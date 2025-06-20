@@ -2,6 +2,7 @@ from logging import getLogger
 
 import numpy as np
 import parselmouth
+import pyreaper
 import pyworld as pw
 import torch
 import torch.nn.functional as F
@@ -56,8 +57,6 @@ class F0_Extractor:
         if f0_extractor in ["parselmouth", "dio", "harvest"]:
             self.fix_by_reaper = fix_by_reaper
             if self.fix_by_reaper:
-                import pyreaper
-
                 self.hop_size /= 2
                 logger.info("extracting f0 will be fixed by reaper.")
         else:
@@ -118,6 +117,21 @@ class F0_Extractor:
                 frame_period=(1000 * self.hop_size / self.sample_rate),
             )
             f0 = np.pad(f0.astype("float"), (start_frame, n_frames - len(f0) - start_frame))
+
+        elif self.f0_extractor == "reaper":
+            # convert audio to int16 if float32
+            if np.issubdtype(audio.dtype, np.floating):
+                audio = (audio * 32768).astype(np.int16)
+
+            _, _, time, f0, _ = pyreaper.reaper(
+                audio,
+                self.sample_rate,
+                frame_period=self.hop_size / self.sample_rate,
+                minf0=self.f0_min,
+                maxf0=self.f0_max,
+            )
+            f0 = np.pad(f0.astype("float"), (start_frame, n_frames - len(f0) - start_frame))
+            f0 = np.where(f0 == -1.0, 0, f0)
 
         # extract f0 using crepe
         elif self.f0_extractor == "crepe":
@@ -183,6 +197,8 @@ class F0_Extractor:
             raise ValueError(f" [x] Unknown f0 extractor: {self.f0_extractor}")
 
         if self.fix_by_reaper:
+            if np.issubdtype(audio.dtype, np.floating):
+                audio = (audio * 32768).astype(np.int16)
             _, _, _time, f0_mask, _ = pyreaper.reaper(
                 audio,
                 self.sample_rate,

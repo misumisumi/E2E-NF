@@ -1,22 +1,26 @@
 import os
 import re
 from logging import getLogger
+from pathlib import Path
 from time import time
 
 import hydra
 import numpy as np
 import soundfile as sf
 import torch
-from e2enf.datasets import MelFeatDataset
 from hydra.utils import to_absolute_path
 from omegaconf import DictConfig
 from tqdm import tqdm
+
+from e2enf.datasets import FeatDataset
+from e2enf.features.signalgenerator import SignalGenerator
+from e2enf.models import dilated_factor
 
 # A logger for this file
 logger = getLogger(__name__)
 
 
-@hydra.main(version_base=None, config_path="config", config_name="decode")
+@hydra.main(version_base=None, config_path="config", config_name="decode_fm")
 def main(config: DictConfig) -> None:
     """Run decoding process."""
 
@@ -41,32 +45,34 @@ def main(config: DictConfig) -> None:
             f"checkpoint-{config.checkpoint_steps}steps.pkl",
         )
     else:
-        pattern = re.compile("\d+")
+        pattern = re.compile(r"\d+")
         m = pattern.search(config.checkpoint_path)
         checkpoint_steps = m.group() if m is not None else "unknown"
         checkpoint_path = config.checkpoint_path
-    state_dict = torch.load(to_absolute_path(checkpoint_path), map_location="cpu")
+    # check directory existence
+    out_dir = Path(to_absolute_path(config.out_dir))
+    out_dir = out_dir.joinpath("wav", str(checkpoint_steps))
+
+    state_dict = torch.load(to_absolute_path(checkpoint_path), map_location="cpu", weights_only=False)
     logger.info(f"Loaded model parameters from {checkpoint_path}.")
     model = hydra.utils.instantiate(config.model)
-    model.load_state_dict(state_dict["model"]["neuralformants"])
+    model.load_state_dict(state_dict["model"]["feature-mapping"])
     model.remove_weight_norm()
     model.eval().to(device)
 
-    vocoder_state_dict = torch.load(to_absolute_path(config.vocoder_checkpoint_path), map_location="cpu")
+    vocoder_state_dict = torch.load(
+        to_absolute_path(config.vocoder_checkpoint_path), map_location="cpu", weights_only=False
+    )
     vocoder = hydra.utils.instantiate(config.vocoder)
     vocoder.load_state_dict(vocoder_state_dict["model"]["generator"])
     vocoder.remove_weight_norm()
     vocoder.eval().to(device)
 
-    # check directory existence
-    out_dir = to_absolute_path(os.path.join(config.out_dir, "wav", str(checkpoint_steps)))
-    os.makedirs(out_dir, exist_ok=True)
-
     for f0_factor in config.f0_factors:
         for formants_factor in config.formants_factors:
-            dataset = MelFeatDataset(
-                stats=to_absolute_path(config.data.stats),
-                feat_list=to_absolute_path(config.data.eval_feat),
+            dataset = FeatDataset(
+                feat_lists=config.data.eval_feat,
+                stats_lists=config.data.stats,
                 allow_cache=config.data.allow_cache,
                 sample_rate=config.data.sample_rate,
                 hop_size=config.data.hop_size,
@@ -77,26 +83,54 @@ def main(config: DictConfig) -> None:
             )
             logger.info(f"The number of features to be decoded = {len(dataset)}.")
 
+            signal_generator = SignalGenerator(
+                sample_rate=config.data.sample_rate,
+                hop_size=config.data.hop_size,
+                sine_amp=config.data.sine_amp,
+                noise_amp=config.data.noise_amp,
+                signal_types=config.data.signal_types,
+            )
+
             with torch.no_grad(), tqdm(dataset, desc="[decode]") as pbar:
                 total_rtf = 0.0
-                for idx, (feat_path, _, x) in enumerate(pbar, 1):
-                    x = torch.FloatTensor(x.T).unsqueeze(0).to(device)
+                for idx, items in enumerate(pbar, 1):
+                    _, feat_path, c_x, mfbsp_x, f0, cf0 = items
+                    if config.mfbsp2spkparams:
+                        c_x = mfbsp_x
+                    # create dense factors
+                    dfs = []
+                    for df, us in zip(
+                        config.data.dense_factors,
+                        np.cumprod(config.vocoder.upsample_scales),
+                    ):
+                        dfs += [
+                            np.repeat(dilated_factor(cf0, config.data.sample_rate, df), us)
+                            if config.data.df_f0_type == "cf0"
+                            else np.repeat(dilated_factor(f0, config.data.sample_rate, df), us)
+                        ]
+                    c_x = torch.FloatTensor(c_x).unsqueeze(0).transpose(2, 1).to(device)
+                    f0 = torch.FloatTensor(f0).view(1, 1, -1).to(device)
+                    cf0 = torch.FloatTensor(cf0).view(1, 1, -1).to(device)
+                    dfs = [torch.FloatTensor(np.array(df)).view(1, 1, -1).to(device) for df in dfs]
+                    if config.data.sine_f0_type == "cf0":
+                        in_signal = signal_generator(cf0)
+                    elif config.data.sine_f0_type == "f0":
+                        in_signal = signal_generator(f0)
                     start = time()
-                    y = model(x).squeeze(0).cpu().numpy()
-                    y = dataset.scaler["mfbsp"].transform(y.T).T
-                    outs = vocoder(x=None, c=torch.from_numpy(y).float().unsqueeze(0).to(device))
+                    c_y = model(c_x)
+                    outs = vocoder(in_signal, c_y, dfs)
                     audio = outs[0].squeeze()
                     rtf = (time() - start) / (audio.size(-1) / config.data.sample_rate)
                     pbar.set_postfix({"RTF": rtf})
                     total_rtf += rtf
 
                     # save output signal as PCM 16 bit wav file
-                    utt_id = os.path.splitext(os.path.basename(feat_path))[0]
+                    utt_id = feat_path.stem
                     fo = "_".join([f"{f:.2f}" for f in formants_factor])
-                    spk_id = feat_path.split(os.path.sep)[config.spkidx]
-                    save_dir = os.path.join(out_dir, spk_id)
-                    os.makedirs(save_dir, exist_ok=True)
-                    save_path = os.path.join(save_dir, f"{utt_id}_f{f0_factor:.2f}_fo{fo}.wav")
+                    spk_id = feat_path.parents[config.spkidx].name
+                    save_dir = out_dir.joinpath(spk_id)
+                    save_dir.mkdir(parents=True, exist_ok=True)
+                    save_path = save_dir.joinpath(f"{utt_id}_f{f0_factor:.2f}_fo{fo}.wav")
                     audio = audio.view(-1).cpu().numpy()
                     sf.write(save_path, audio, config.data.sample_rate, "PCM_16")
 

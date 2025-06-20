@@ -30,7 +30,7 @@ def read_hdf5(hdf5_name, hdf5_path):
     hdf5_file = h5py.File(hdf5_name, "r")
 
     if hdf5_path not in hdf5_file:
-        logger.error(f"There is no such a data in hdf5 file. ({hdf5_path})")
+        logger.error(f"There is no such a data in {hdf5_name}. ({hdf5_path})")
         sys.exit(1)
 
     hdf5_data = hdf5_file[hdf5_path][()]

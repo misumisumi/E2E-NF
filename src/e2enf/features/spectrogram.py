@@ -59,6 +59,7 @@ class STFT:
         self.mel_basis = {}
         self.hann_window = {}
 
+    @torch.no_grad()
     def get_linear(self, y, keyshift=0, speed=1, center=False) -> Tensor:
         if y.dim() == 1:
             y = y.unsqueeze(0)
@@ -75,8 +76,8 @@ class STFT:
         if keyshift_key not in self.hann_window:
             self.hann_window[keyshift_key] = torch.hann_window(win_size_new).to(y.device)
 
-        pad_left = (win_size_new - hop_length_new) // 2
-        pad_right = max((win_size_new - hop_length_new + 1) // 2, win_size_new - y.size(-1) - pad_left)
+        pad_left = (n_fft_new - hop_length_new) // 2
+        pad_right = max((n_fft_new - hop_length_new + 1) // 2, n_fft_new - y.size(-1) - pad_left)
         if pad_right < y.size(-1):
             mode = "reflect"
         else:
@@ -106,6 +107,7 @@ class STFT:
 
         return spec.squeeze(0)
 
+    @torch.no_grad()
     def to_mel(self, spec: Tensor, log: str = "log") -> Tensor:
         """return log-scale mel spctrogram
 

@@ -1,4 +1,4 @@
-_target_: sifigan.models.SiFiGANGenerator
+_target_: e2enf.models.SiFiGANGenerator
 in_channels: 43 # Number of input channels.
 out_channels: 1 # Number of output channels.
 channels: 512 # Number of initial channels.
