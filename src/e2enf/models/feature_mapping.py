@@ -15,7 +15,7 @@ class FeatureMapping(nn.Module):
         layers: int = 6,  # レイヤー数
         stacks: int = 3,  # 畳み込みブロックの数
         residual_channels: int = 1024,  # 残差結合のチャネル数
-        gate_channels: int = 128,  # ゲートのチャネル数
+        gate_channels: int = 1024,  # ゲートのチャネル数
         skip_out_channels: int = 1024,  # スキップ接続のチャネル数
         kernel_size: int = 3,  # 1 次元畳み込みのカーネルサイズ
     ):

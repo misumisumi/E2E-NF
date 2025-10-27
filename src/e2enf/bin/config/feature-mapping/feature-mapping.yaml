@@ -4,6 +4,6 @@ out_channels: 80 # 出力のチャネル数
 layers: 6 # レイヤー数
 stacks: 3 # 畳み込みブロックの数
 residual_channels: 1024 # 残差結合のチャネル数
-gate_channels: 128 # ゲートのチャネル数
+gate_channels: 1024 # ゲートのチャネル数
 skip_out_channels: 1024 # スキップ接続のチャネル数
 kernel_size: 3 # 1 次元畳み込みのカーネルサイズ

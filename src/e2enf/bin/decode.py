@@ -78,7 +78,7 @@ def main(config: DictConfig) -> None:
             )
 
             with torch.no_grad(), tqdm(dataset, desc="[decode]") as pbar:
-                total_rtf = 0.0
+                total_rtf = 1.0
                 for idx, items in enumerate(pbar, 1):
                     _, feat_path, c, _, f0, cf0 = items
                     # create dense factors
